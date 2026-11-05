@@ -1,7 +1,10 @@
 
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 function Sidebar() {
+  const { logout } = useAuth()
+
   return (
     <aside className="sidebar">
       <div>
@@ -33,6 +36,13 @@ function Sidebar() {
           <span>✦</span>
           <p>Stay focused.<br />Stay ahead.</p>
         </div>
+
+        <button
+          className="logout-button"
+          onClick={logout}
+        >
+          ↪ &nbsp; Logout
+        </button>
 
         <p className="version">BFocused · Version 2.0</p>
       </div>

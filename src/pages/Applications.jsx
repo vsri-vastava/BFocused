@@ -1,5 +1,6 @@
 
 import { useState } from 'react'
+
 import { useApplications } from '../context/ApplicationContext'
 
 const emptyForm = {
@@ -25,17 +26,40 @@ function Applications() {
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
+  const [typeFilter, setTypeFilter] = useState('All')
+  const [sortBy, setSortBy] = useState('newest')
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  const filteredApplications = applications.filter(app => {
-    const text = `${app.company} ${app.role} ${app.location}`.toLowerCase()
-    const matchesSearch = text.includes(search.toLowerCase())
-    const matchesFilter = filter === 'All' || app.status === filter
+  const filteredApplications = [...applications]
+    .filter(app => {
+      const text = `${app.company} ${app.role} ${app.location}`.toLowerCase()
 
-    return matchesSearch && matchesFilter
-  })
+      const matchesSearch = text.includes(search.toLowerCase())
+      const matchesFilter = filter === 'All' || app.status === filter
+      const matchesType = typeFilter === 'All' || app.type === typeFilter
+
+      return matchesSearch && matchesFilter && matchesType
+    })
+    .sort((a, b) => {
+      if (sortBy === 'newest') {
+        return new Date(b.appliedDate || 0) - new Date(a.appliedDate || 0)
+      }
+
+      if (sortBy === 'oldest') {
+        return new Date(a.appliedDate || 0) - new Date(b.appliedDate || 0)
+      }
+
+      if (sortBy === 'deadline') {
+        if (!a.deadline) return 1
+        if (!b.deadline) return -1
+
+        return new Date(a.deadline) - new Date(b.deadline)
+      }
+
+      return 0
+    })
 
   function openAdd() {
     setEditingId(null)
@@ -142,6 +166,28 @@ function Applications() {
             <option>Interview</option>
             <option>Offer</option>
             <option>Rejected</option>
+          </select>
+
+          <select
+            className="filter-select"
+            value={typeFilter}
+            onChange={event => setTypeFilter(event.target.value)}
+          >
+            <option value="All">All Types</option>
+            <option value="Internship">Internship</option>
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+            <option value="Contract">Contract</option>
+          </select>
+
+          <select
+            className="filter-select"
+            value={sortBy}
+            onChange={event => setSortBy(event.target.value)}
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="deadline">Upcoming Deadline</option>
           </select>
         </div>
 
