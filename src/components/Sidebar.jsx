@@ -28,6 +28,14 @@ function Sidebar() {
           <NavLink to="/analytics">
             ◷ &nbsp; Analytics
           </NavLink>
+
+          <NavLink to="/resumes">
+            ▧ &nbsp; My Resumes
+          </NavLink>
+
+          <NavLink to="/ai">
+  ✦       &nbsp; AI Career Assistant
+          </NavLink>
         </nav>
       </div>
 

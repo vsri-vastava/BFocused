@@ -7,6 +7,8 @@ require('dotenv').config()
 // Import routes
 const applicationRoutes = require('./routes/applicationRoutes')
 const authRoutes = require('./routes/authRoutes')
+const resumeRoutes = require('./routes/resumeRoutes')
+const aiRoutes = require('./routes/aiRoutes')
 
 const app = express()
 
@@ -22,11 +24,24 @@ app.get('/', (req, res) => {
 // API routes
 app.use('/api/applications', applicationRoutes)
 app.use('/api/auth', authRoutes)
+app.use('/api/resumes', resumeRoutes)
+app.use('/api/ai', aiRoutes)
 
 // Diagnostic: Display registered authentication routes
 console.log(
   'Auth routes:',
   authRoutes.stack
+    .filter(layer => layer.route)
+    .map(layer => ({
+      path: layer.route.path,
+      methods: layer.route.methods,
+    }))
+)
+
+// Diagnostic: Display registered AI routes
+console.log(
+  'AI routes:',
+  aiRoutes.stack
     .filter(layer => layer.route)
     .map(layer => ({
       path: layer.route.path,

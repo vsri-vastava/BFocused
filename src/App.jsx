@@ -5,6 +5,8 @@ import Dashboard from './pages/Dashboard'
 import Applications from './pages/Applications'
 import Kanban from './pages/Kanban'
 import Analytics from './pages/Analytics'
+import Resumes from './pages/Resumes'
+import AI from './pages/AI'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import { ApplicationProvider } from './context/ApplicationContext'
@@ -29,6 +31,8 @@ function ProtectedLayout() {
             <Route path="/applications" element={<Applications />} />
             <Route path="/kanban" element={<Kanban />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/resumes" element={<Resumes />} />
+            <Route path="/ai" element={<AI />} />
           </Routes>
         </main>
       </div>
