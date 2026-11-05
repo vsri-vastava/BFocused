@@ -1,14 +1,18 @@
 
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 
 function Sidebar() {
   const { logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
 
   return (
     <aside className="sidebar">
       <div>
-        <h2 className="logo">BFocused<span>.</span></h2>
+        <h2 className="logo">
+          BFocused<span>.</span>
+        </h2>
 
         <p className="menu-label">WORKSPACE</p>
 
@@ -34,15 +38,29 @@ function Sidebar() {
           </NavLink>
 
           <NavLink to="/ai">
-  ✦       &nbsp; AI Career Assistant
+            ✦ &nbsp; AI Career Assistant
           </NavLink>
         </nav>
       </div>
 
       <div className="sidebar-bottom">
+
+        {/* Theme Toggle */}
+        <button
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          <span>{theme === 'light' ? '☾' : '☀'}</span>
+          {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+        </button>
+
         <div className="sidebar-tip">
           <span>✦</span>
-          <p>Stay focused.<br />Stay ahead.</p>
+          <p>
+            Stay focused.<br />
+            Stay ahead.
+          </p>
         </div>
 
         <button
