@@ -1,8 +1,93 @@
 
 import { useEffect, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useAuth } from '../context/AuthContext'
 
 const API_URL = 'http://localhost:5000/api'
+
+function extractScore(text, patterns) {
+  for (const pattern of patterns) {
+    const result = text.match(pattern)
+
+    if (result) {
+      const score = Number(result[1])
+      if (score >= 0 && score <= 100) return score
+    }
+  }
+
+  return null
+}
+
+function ScoreCard({ label, score }) {
+  if (score === null) return null
+
+  return (
+    <div className="ai-score-card">
+      <div
+        className="ai-score-ring"
+        style={{ '--score': `${score}%` }}
+        role="progressbar"
+        aria-valuenow={score}
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-label={`${label}: ${score} out of 100`}
+      >
+        <span>{score}</span>
+      </div>
+      <div>
+        <h3>{label}</h3>
+        <p>Out of 100</p>
+      </div>
+    </div>
+  )
+}
+
+function AIResult({ title, content, type }) {
+  const overallScore = extractScore(content, [
+    /overall(?:\s+resume)?\s+score[^0-9]{0,30}(\d{1,3})\s*(?:\/\s*100|%)/i,
+    /resume\s+score[^0-9]{0,30}(\d{1,3})\s*(?:\/\s*100|%)/i,
+  ])
+
+  const atsScore = extractScore(content, [
+    /ATS(?:\s+compatibility)?(?:\s+score)?[^0-9]{0,30}(\d{1,3})\s*(?:\/\s*100|%)/i,
+  ])
+
+  const matchScore = extractScore(content, [
+    /(?:job\s+)?match\s+score[^0-9]{0,30}(\d{1,3})\s*(?:\/\s*100|%)/i,
+  ])
+
+  return (
+    <div className="ai-result-card">
+      <div className="ai-result-heading">
+        <div>
+          <span className="ai-result-label">AI REPORT</span>
+          <h2>{title}</h2>
+        </div>
+        <span className="ai-result-icon">✦</span>
+      </div>
+
+      {type === 'analysis' && (
+        <div className="ai-score-grid">
+          <ScoreCard label="Overall Resume Score" score={overallScore} />
+          <ScoreCard label="ATS Compatibility" score={atsScore} />
+        </div>
+      )}
+
+      {type === 'match' && matchScore !== null && (
+        <div className="ai-score-grid">
+          <ScoreCard label="Job Match Score" score={matchScore} />
+        </div>
+      )}
+
+      <div className="ai-markdown">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {content}
+        </ReactMarkdown>
+      </div>
+    </div>
+  )
+}
 
 function AI() {
   const { token } = useAuth()
@@ -21,7 +106,6 @@ function AI() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  // Fetch uploaded resumes
   useEffect(() => {
     async function fetchResumes() {
       try {
@@ -54,7 +138,6 @@ function AI() {
     }
   }, [token])
 
-  // Analyze resume
   async function handleAnalyze() {
     if (!selectedResume) {
       setError('Please upload and select a resume first.')
@@ -94,7 +177,6 @@ function AI() {
     }
   }
 
-  // Match resume with job description
   async function handleMatch() {
     if (!selectedResume) {
       setError('Please select a resume first.')
@@ -152,15 +234,14 @@ function AI() {
         </div>
       </header>
 
-      <section className="applications">
+      <section className="applications ai-page">
 
-        {/* Resume Selection */}
-        <div className="resume-upload-card">
-          <h2>Select Your Resume</h2>
-
-          <p>
-            Choose an uploaded PDF resume to use with the AI tools.
-          </p>
+        <div className="resume-upload-card ai-resume-selector">
+          <div>
+            <span className="ai-section-label">YOUR DOCUMENT</span>
+            <h2>Select Your Resume</h2>
+            <p>Choose an uploaded PDF resume to use with the AI tools.</p>
+          </div>
 
           {loadingResumes ? (
             <p>Loading your resumes...</p>
@@ -186,87 +267,87 @@ function AI() {
         </div>
 
         {error && (
-          <p className="auth-error">{error}</p>
+          <div className="ai-alert ai-alert-error" role="alert">
+            {error}
+          </div>
         )}
 
         {message && (
-          <p>{message}</p>
+          <div className="ai-alert ai-alert-success" role="status">
+            ✓ {message}
+          </div>
         )}
 
-        {/* AI Resume Analyzer */}
-        <div className="resume-upload-card">
-          <h2>✦ AI Resume Analyzer</h2>
+        <div className="ai-tools-grid">
+          <div className="resume-upload-card ai-tool-card">
+            <span className="ai-tool-icon">✦</span>
+            <span className="ai-section-label">RESUME REVIEW</span>
+            <h2>AI Resume Analyzer</h2>
+            <p>
+              Get an AI-powered review of your resume, including strengths,
+              weaknesses, ATS compatibility and improvement suggestions.
+            </p>
 
-          <p>
-            Get an AI-powered review of your resume, including strengths,
-            weaknesses, ATS compatibility and improvement suggestions.
-          </p>
+            <button
+              className="add-button"
+              onClick={handleAnalyze}
+              disabled={
+                analyzing ||
+                matching ||
+                loadingResumes ||
+                resumes.length === 0
+              }
+            >
+              {analyzing ? 'Analyzing Resume...' : 'Analyze My Resume'}
+            </button>
+          </div>
 
-          <button
-            className="add-button"
-            onClick={handleAnalyze}
-            disabled={
-              analyzing ||
-              matching ||
-              loadingResumes ||
-              resumes.length === 0
-            }
-          >
-            {analyzing ? 'Analyzing Resume...' : 'Analyze My Resume'}
-          </button>
+          <div className="resume-upload-card ai-tool-card">
+            <span className="ai-tool-icon">⌕</span>
+            <span className="ai-section-label">JOB COMPATIBILITY</span>
+            <h2>AI Job Matcher</h2>
+            <p>
+              Paste a job description to discover how closely your resume
+              matches the role.
+            </p>
+
+            <textarea
+              rows="8"
+              value={jobDescription}
+              onChange={event => setJobDescription(event.target.value)}
+              placeholder="Paste the complete job description here..."
+            />
+
+            <button
+              className="add-button"
+              onClick={handleMatch}
+              disabled={
+                matching ||
+                analyzing ||
+                loadingResumes ||
+                resumes.length === 0 ||
+                !jobDescription.trim()
+              }
+            >
+              {matching ? 'Finding Your Match...' : 'Match My Resume'}
+            </button>
+          </div>
         </div>
 
-        {/* AI Job Matcher */}
-        <div className="resume-upload-card">
-          <h2>✦ AI Job Matcher</h2>
-
-          <p>
-            Paste a job description to discover how closely your resume
-            matches the role.
-          </p>
-
-          <textarea
-            rows="8"
-            value={jobDescription}
-            onChange={event => setJobDescription(event.target.value)}
-            placeholder="Paste the complete job description here..."
-          />
-
-          <button
-            className="add-button"
-            onClick={handleMatch}
-            disabled={
-              matching ||
-              analyzing ||
-              loadingResumes ||
-              resumes.length === 0 ||
-              !jobDescription.trim()
-            }
-          >
-            {matching ? 'Finding Your Match...' : 'Match My Resume'}
-          </button>
-        </div>
-
-        {/* Resume Analysis Result */}
         {analysis && (
-          <div className="resume-upload-card">
-            <h2>Resume Analysis Results</h2>
-
-            <div className="ai-result">
-              <pre>{analysis}</pre>
-            </div>
-          </div>
+          <AIResult
+            title="Resume Analysis Results"
+            content={analysis}
+            type="analysis"
+          />
         )}
 
-        {/* Job Matching Result */}
         {match && (
-          <div className="resume-upload-card">
-            <h2>Job Matching Results</h2>
-
-            <div className="ai-result">
-              <pre>{match}</pre>
-            </div>
-          </div>
+          <AIResult
+            title="Job Matching Results"
+            content={match}
+            type="match"
+          />
         )}
 
       </section>
